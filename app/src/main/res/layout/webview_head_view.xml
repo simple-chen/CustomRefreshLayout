@@ -12,31 +12,9 @@
         android:layout_height="30dp"
         android:src="@drawable/down_refresh"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/guideline"
-        app:layout_constraintHorizontal_bias="0.95"
-        app:layout_constraintVertical_bias="0.50"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        />
-
-    <TextView
-        android:id="@+id/tv_down_refresh_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="下拉刷新"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintHorizontal_bias="0.05"
-        app:layout_constraintVertical_bias="0.5"
-        />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.50" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
