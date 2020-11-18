@@ -55,6 +55,10 @@ public abstract class CustomRefreshLayout extends ViewGroup implements AbsListVi
     private int VIEW_HEAD_HEIGHT;//head布局高度
     private int VIEW_FOOT_HEIGHT;//foot布局高度
 
+    private int mScrollViewHeight;
+    private int mDistance;
+
+
     private float mLastRawY;
     private float mLastRawX;
 
@@ -63,7 +67,8 @@ public abstract class CustomRefreshLayout extends ViewGroup implements AbsListVi
     private Scroller mScroller;
     private View mHeadView;
     private View mFootView;
-    private int mHeight;
+
+    private OnDistanceChanged mOnDistanceChanged;
 
 
     public CustomRefreshLayout(Context context) {
@@ -94,6 +99,11 @@ public abstract class CustomRefreshLayout extends ViewGroup implements AbsListVi
         int contentHeight = 0;
         for (int i = 0; i < getChildCount(); i++) {
             View childView = getChildAt(i);
+
+            if (childView.getVisibility() == GONE) {
+                continue;
+            }
+
             if (childView != mHeadView && childView != mFootView) {
                 childView.layout(0, contentHeight, childView.getMeasuredWidth(), childView.getMeasuredHeight());
                 contentHeight += childView.getMeasuredHeight();
@@ -125,6 +135,10 @@ public abstract class CustomRefreshLayout extends ViewGroup implements AbsListVi
         }
         for (int i = 0; i < getChildCount(); i++) {
             View childView = getChildAt(i);
+            if (childView.getVisibility() == GONE) {
+                continue;
+            }
+
             measureChild(childView, widthMeasureSpec, heightMeasureSpec);
             if (mHeadView == childView) VIEW_HEAD_HEIGHT = mHeadView.getMeasuredHeight();
             if (mFootView == childView) VIEW_FOOT_HEIGHT = mFootView.getMeasuredHeight();
@@ -195,7 +209,6 @@ public abstract class CustomRefreshLayout extends ViewGroup implements AbsListVi
                     return false;
                 }
                 int offsetY = (int) (rawY - mLastRawY);
-
                 if (Math.abs(offsetY) > 2) {//如果滑动距离大于最小滑动距离，处理滑动
                     Log.e("clp", "状态----CURRENT_STATUS " + CURRENT_STATUS + "offsetY " + offsetY + "getScrollY()" + getScrollY());
                     if (CURRENT_STATUS == STATUS_START) {//如果是初始状态
@@ -283,18 +296,31 @@ public abstract class CustomRefreshLayout extends ViewGroup implements AbsListVi
                             scrollBy(0, -getScrollY());
 
                         }
+
                     }
                     //上滑处理
                     downDealWithUp();
                 } else {//下滑...
                     if (offsetY - getScrollY() < VIEW_HEAD_HEIGHT) {//如果下滑offset后未超过headView的高度就让下滑offset
                         scrollBy(0, -offsetY);
+                        if (mOnDistanceChanged != null) {
+                            mOnDistanceChanged.onDistanceChanged(Math.abs(getScrollY()));
+                        }
                     } else {//否则只允许下拉到headView的高度
                         scrollBy(0, -VIEW_HEAD_HEIGHT - getScrollY());
                         Log.e("clp--------------***", "downRefresh: scrollBy -VIEW_HEAD_HEIGHT - getScrollY()" + (-VIEW_HEAD_HEIGHT - getScrollY()));
                     }
                     //下拉处理
                     downDealWithDown();
+                }
+
+                if (mOnDistanceChanged != null) {
+                    if (Math.abs(getScrollY())== VIEW_HEAD_HEIGHT){
+                        mOnDistanceChanged.onDistanceChanged(Math.abs(getScrollY()));
+                    }
+
+                    Log.e("clp---------", "downRefresh: mOnDistanceChanged"+mOnDistanceChanged);
+
                 }
             }
 
@@ -421,10 +447,10 @@ public abstract class CustomRefreshLayout extends ViewGroup implements AbsListVi
             scrollView.setOnScrollChangeListener(new OnScrollChangeListener() {
                 @Override
                 public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
-                    mHeight = scrollView.getHeight() + scrollY;
+                    mScrollViewHeight = scrollView.getHeight() + scrollY;
                 }
             });
-            return mHeight - view.getBottom() == 0;//到达底部
+            return mScrollViewHeight - view.getBottom() == 0;//到达底部
         }
         return true;
     }
@@ -449,12 +475,7 @@ public abstract class CustomRefreshLayout extends ViewGroup implements AbsListVi
         dealWithHide();
     }
 
-    /**
-     * @param isUpRefresh true:上拉加载MOVE_UP的时候刷新数据，false :move到底的时候刷新数据
-     */
-    public void setUpRefresh(boolean isUpRefresh) {
-        this.isUpRefresh = isUpRefresh;
-    }
+
 
     protected void downDealWithRefreshing() {
     }//下拉处理正在刷新
@@ -497,4 +518,23 @@ public abstract class CustomRefreshLayout extends ViewGroup implements AbsListVi
 
     protected abstract View getFootView();//获得尾部布局
 
+    protected float getHeadViewHeight(){
+        return (float) VIEW_HEAD_HEIGHT;
+    }
+
+
+    public interface OnDistanceChanged {
+        void onDistanceChanged(int distance);
+    }
+
+    public void setOnDistanceChanged(OnDistanceChanged onDistanceChanged) {
+        mOnDistanceChanged = onDistanceChanged;
+    }
+
+    /**
+     * @param isUpRefresh true:上拉加载MOVE_UP的时候刷新数据，false :move到底的时候刷新数据
+     */
+    public void setUpRefresh(boolean isUpRefresh) {
+        this.isUpRefresh = isUpRefresh;
+    }
 }
